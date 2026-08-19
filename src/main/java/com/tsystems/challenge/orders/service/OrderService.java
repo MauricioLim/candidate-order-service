@@ -1,5 +1,6 @@
 package com.tsystems.challenge.orders.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tsystems.challenge.orders.domain.Order;
 import com.tsystems.challenge.orders.domain.OrderStatus;
 import com.tsystems.challenge.orders.dto.CreateOrderRequest;
@@ -30,9 +31,13 @@ public class OrderService {
         this.clock = clock;
     }
 
-    public Order create(CreateOrderRequest request) {
-        BigDecimal unitPrice = priceService.priceFor(request.productId());
+    public Order create(CreateOrderRequest request) throws JsonProcessingException {
+        Princing p = new Princing();
+        String json = p.pricingCheck(request.productId(), request.country(), request.currency());
+
+        BigDecimal unitPrice = new BigDecimal(json);
         BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(request.quantity()));
+
 
         Order order = new Order(
                 UUID.randomUUID(),
@@ -43,7 +48,10 @@ public class OrderService {
                 request.currency(),
                 unitPrice,
                 totalPrice,
-                OrderStatus.CONFIRMED,
+                OrderStatus.PENDING,
+                Instant.now(clock),
+                1,
+                "teste",
                 Instant.now(clock)
         );
 

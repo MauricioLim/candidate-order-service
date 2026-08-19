@@ -1,5 +1,6 @@
 package com.tsystems.challenge.orders.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tsystems.challenge.orders.domain.Order;
 import com.tsystems.challenge.orders.domain.OrderStatus;
 import com.tsystems.challenge.orders.service.OrderService;
@@ -61,6 +62,8 @@ public class OrderWebController {
             );
             addDashboardData(model);
             return "orders";
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 

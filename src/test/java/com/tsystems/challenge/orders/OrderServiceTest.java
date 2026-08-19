@@ -1,5 +1,6 @@
 package com.tsystems.challenge.orders;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tsystems.challenge.orders.domain.Order;
 import com.tsystems.challenge.orders.domain.OrderStatus;
 import com.tsystems.challenge.orders.dto.CreateOrderRequest;
@@ -13,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OrderServiceTest {
 
     @Test
-    void createsAndConfirmsAnOrderUsingTheLocalCatalog() {
+    void createsAndConfirmsAnOrderUsingTheLocalCatalog() throws JsonProcessingException {
         OrderService service = new OrderService(
                 new InMemoryOrderRepository(),
                 new LocalCatalogPriceService()

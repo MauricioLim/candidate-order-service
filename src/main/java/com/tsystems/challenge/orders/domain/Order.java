@@ -14,6 +14,9 @@ public record Order(
         BigDecimal unitPrice,
         BigDecimal totalPrice,
         OrderStatus status,
-        Instant createdAt
+        Instant createdAt,
+        int pricingAttempts,
+        String failureReason,
+        Instant updatedAt
 ) {
 }

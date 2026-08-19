@@ -17,7 +17,10 @@ public record OrderResponse(
         BigDecimal unitPrice,
         BigDecimal totalPrice,
         OrderStatus status,
-        Instant createdAt
+        Instant createdAt,
+        int pricingAttempts,
+        String failureReason,
+        Instant updatedAt
 ) {
     public static OrderResponse from(Order order) {
         return new OrderResponse(
@@ -30,7 +33,10 @@ public record OrderResponse(
                 order.unitPrice(),
                 order.totalPrice(),
                 order.status(),
-                order.createdAt()
+                order.createdAt(),
+                order.pricingAttempts(),
+                order.failureReason(),
+                order.updatedAt()
         );
     }
 }

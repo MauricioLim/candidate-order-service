@@ -1,6 +1,5 @@
 package com.tsystems.challenge.orders.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tsystems.challenge.orders.domain.Order;
 import com.tsystems.challenge.orders.domain.OrderStatus;
 import com.tsystems.challenge.orders.service.OrderService;
@@ -10,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -51,20 +51,16 @@ public class OrderWebController {
             return "orders";
         }
 
-        try {
-            Order order = orderService.create(form.toRequest());
-            redirectAttributes.addAttribute("created", order.id());
-            return "redirect:/";
-        } catch (RuntimeException ex) {
-            model.addAttribute(
-                    "integrationError",
-                    "The order could not be accepted. Review how the application handles Pricing API failures."
-            );
-            addDashboardData(model);
-            return "orders";
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        Order order = orderService.create(form.toRequest());
+        redirectAttributes.addAttribute("created", order.id());
+        return "redirect:/";
+    }
+
+    @PostMapping("/ui/orders/{id}/retry")
+    public String retry(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
+        orderService.retryPricing(id);
+        redirectAttributes.addAttribute("created", id);
+        return "redirect:/";
     }
 
     private void addDashboardData(Model model) {
@@ -75,15 +71,17 @@ public class OrderWebController {
         long confirmed = orders.stream()
                 .filter(order -> order.status() == OrderStatus.CONFIRMED)
                 .count();
-        long awaitingAttention = orders.size() - confirmed;
-        long withoutPrice = orders.stream()
-                .filter(order -> order.unitPrice() == null)
+        long pendingPricing = orders.stream()
+                .filter(order -> order.status() == OrderStatus.PENDING_PRICING)
+                .count();
+        long pricingFailed = orders.stream()
+                .filter(order -> order.status() == OrderStatus.PRICING_FAILED)
                 .count();
 
         model.addAttribute("orders", orders);
         model.addAttribute("orderCount", orders.size());
         model.addAttribute("confirmedCount", confirmed);
-        model.addAttribute("attentionCount", awaitingAttention);
-        model.addAttribute("unpricedCount", withoutPrice);
+        model.addAttribute("pendingCount", pendingPricing);
+        model.addAttribute("failedCount", pricingFailed);
     }
 }

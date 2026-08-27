@@ -35,11 +35,6 @@
             <code th:text="${createdOrderId}">00000000-0000-0000-0000-000000000000</code>
         </div>
 
-        <div class="alert alert-error" th:if="${integrationError != null}" role="alert">
-            <strong>Order was not accepted.</strong>
-            <span th:text="${integrationError}">The order could not be accepted.</span>
-        </div>
-
         <form class="order-form" method="post" th:action="@{/ui/orders}" th:object="${orderForm}">
             <div class="field field-wide">
                 <label for="customerId">Customer ID</label>
@@ -90,12 +85,12 @@
             <strong class="metric-value" th:text="${confirmedCount}">0</strong>
         </article>
         <article class="metric">
-            <span class="metric-label">Needs attention</span>
-            <strong class="metric-value" th:text="${attentionCount}">0</strong>
+            <span class="metric-label">Pending pricing</span>
+            <strong class="metric-value" th:text="${pendingCount}">0</strong>
         </article>
         <article class="metric">
-            <span class="metric-label">Without price</span>
-            <strong class="metric-value" th:text="${unpricedCount}">0</strong>
+            <span class="metric-label">Pricing failed</span>
+            <strong class="metric-value" th:text="${failedCount}">0</strong>
         </article>
     </aside>
 
@@ -125,14 +120,18 @@
                     <th scope="col">Qty</th>
                     <th scope="col">Unit price</th>
                     <th scope="col">Total</th>
+                    <th scope="col">Attempts</th>
+                    <th scope="col">Details</th>
                     <th scope="col">Created</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="order : ${orders}">
                     <td>
-                        <span class="status" th:classappend="${order.status.name() == 'CONFIRMED'} ? ' status-confirmed' : ' status-attention'"
-                              th:text="${order.status}">CONFIRMED</span>
+                        <span class="status"
+                              th:classappend="${order.status.name() == 'CONFIRMED'} ? ' status-confirmed' : (${order.status.name() == 'PENDING_PRICING'} ? ' status-pending' : ' status-failed')"
+                              th:text="${order.status.name() == 'PENDING_PRICING'} ? 'AWAITING PRICE' : (${order.status.name() == 'PRICING_FAILED'} ? 'PRICING FAILED' : 'CONFIRMED')">CONFIRMED</span>
                     </td>
                     <td><code class="order-id" th:text="${order.id}">order-id</code></td>
                     <td th:text="${order.customerId}">customer-42</td>
@@ -141,13 +140,23 @@
                     <td th:text="${order.quantity}">1</td>
                     <td>
                         <span th:if="${order.unitPrice != null}" th:text="|${order.unitPrice} ${order.currency}|">19.99 EUR</span>
-                        <span class="not-available" th:unless="${order.unitPrice != null}">Not priced</span>
+                        <span class="not-available" th:unless="${order.unitPrice != null}">Not priced yet</span>
                     </td>
                     <td>
                         <span th:if="${order.totalPrice != null}" th:text="|${order.totalPrice} ${order.currency}|">19.99 EUR</span>
                         <span class="not-available" th:unless="${order.totalPrice != null}">—</span>
                     </td>
+                    <td th:text="${order.pricingAttempts}">1</td>
+                    <td>
+                        <span th:if="${order.failureReason != null}" class="failure-reason" th:text="${order.failureReason}">reason</span>
+                        <span class="not-available" th:unless="${order.failureReason != null}">—</span>
+                    </td>
                     <td><time th:datetime="${order.createdAt}" th:text="${order.createdAt}">2026-08-14T10:00:00Z</time></td>
+                    <td>
+                        <form th:if="${order.status.name() != 'CONFIRMED'}" method="post" th:action="@{'/ui/orders/' + ${order.id} + '/retry'}">
+                            <button class="button button-secondary button-small" type="submit">Retry pricing</button>
+                        </form>
+                    </td>
                 </tr>
                 </tbody>
             </table>

@@ -1,6 +1,5 @@
 package com.tsystems.challenge.orders.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tsystems.challenge.orders.dto.CreateOrderRequest;
 import com.tsystems.challenge.orders.dto.OrderResponse;
 import com.tsystems.challenge.orders.service.OrderService;
@@ -28,7 +27,7 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) throws JsonProcessingException {
+    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) {
         return OrderResponse.from(orderService.create(request));
     }
 

@@ -1,7 +1,7 @@
 package com.tsystems.challenge.orders.domain;
 
 public enum OrderStatus {
+    PENDING_PRICING,
     CONFIRMED,
-    FAILED,
-    PENDING
+    PRICING_FAILED
 }

@@ -7,3 +7,10 @@ server:
 pricing:
   api:
     url: ${PRICING_API_URL:http://localhost:8090}
+  retry:
+    scheduler:
+      # How often the background job re-attempts pricing for orders stuck
+      # in PENDING_PRICING. Kept short here so the effect is easy to observe
+      # during development/demo; a production system would tune this based
+      # on the provider's typical outage duration.
+      fixed-delay-ms: 15000

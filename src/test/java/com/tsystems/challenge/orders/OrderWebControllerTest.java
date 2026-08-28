@@ -1,4 +1,4 @@
-package com.tsystems.challenge.orders.service;
+package com.tsystems.challenge.orders;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +51,6 @@ class OrderWebControllerTest {
                         .param("currency", "eur"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("orders"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Invalid")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("field-error")));
     }
 }

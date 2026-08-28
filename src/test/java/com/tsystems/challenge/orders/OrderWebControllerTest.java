@@ -1,4 +1,4 @@
-package com.tsystems.challenge.orders;
+package com.tsystems.challenge.orders.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -165,6 +165,79 @@ The application starts on `http://localhost:8080`.
 
 Open `http://localhost:8080/` in a browser to use the supplied HTML/CSS dashboard. The REST API remains available under `/api/orders`.
 
+## My solution
+
+This section describes the solution actually implemented for this exercise,
+as required by the submission checklist. For the full reasoning behind each
+decision, see [`DECISIONS.md`](DECISIONS.md).
+
+### What changed
+
+- The local price catalog was removed. `OrderService` now obtains the unit
+  price exclusively from the external Pricing API through `PricingClient`.
+- Orders are always persisted with a stable ID **before** pricing is
+  attempted (`PENDING_PRICING`), then transition to `CONFIRMED` on a
+  successful quote or `PRICING_FAILED` on a permanent provider error
+  (`400`/`404`). Transient failures (`5xx`, timeouts, connection errors,
+  and any other unrecognized non-2xx status) keep the order in
+  `PENDING_PRICING` so it can be retried.
+- Two independent retry layers handle Pricing API failures: a short
+  in-process technical retry inside `PricingClient` (`@Retryable`, 3
+  attempts) for brief blips, and a business-level retry
+  (`PricingRetryScheduler`, running on a fixed delay) plus a manual
+  "Retry pricing" button on the dashboard for outages that outlast the
+  technical retry.
+- The Thymeleaf dashboard was extended to show status as text (not color
+  alone), the number of pricing attempts, the last failure reason, and a
+  per-order retry action — see CR-002 and the "Browser UI" section of
+  [`DECISIONS.md`](DECISIONS.md) for what is deliberately shown or hidden.
+
+### New/updated endpoints
+
+| Method | Path                     | Purpose                                                        |
+|--------|--------------------------|------------------------------------------------------------------|
+| `POST` | `/api/orders`            | Create an order (unchanged contract; pricing now comes from the external API) |
+| `GET`  | `/api/orders/{id}`       | Retrieve an order, including `status`, `pricingAttempts`, `failureReason` |
+| `GET`  | `/api/orders`            | List orders |
+| `GET`  | `/`                      | HTML dashboard |
+| `POST` | `/ui/orders`             | Create an order from the dashboard form |
+| `POST` | `/ui/orders/{id}/retry`  | Manually trigger a pricing retry for one order (dashboard only, plain HTML form) |
+
+### Configuration
+
+Two settings were introduced for the Pricing API integration
+(`src/main/resources/application.yml`):
+
+| Property                              | Env var            | Default                 | Meaning                                                              |
+|----------------------------------------|---------------------|--------------------------|------------------------------------------------------------------------|
+| `pricing.api.url`                     | `PRICING_API_URL`  | `http://localhost:8090` | Base URL of the external Pricing API |
+| `pricing.retry.scheduler.fixed-delay-ms` | —                | `15000`                 | How often the background job re-attempts pricing for orders stuck in `PENDING_PRICING` |
+
+### How to run this solution
+
+1. Start the external Pricing API (see [above](#running-the-external-pricing-api)):
+   ```bash
+   docker run --rm --name pricing-api -p 8090:8080 eduardosassegdcbrazil/tsystems-pricing-api:1.0
+   ```
+2. (Optional) point the application at a different Pricing API URL:
+   ```bash
+   export PRICING_API_URL=http://localhost:8090
+   ```
+3. Run the tests:
+   ```bash
+   mvn test
+   ```
+4. Run the application:
+   ```bash
+   mvn spring-boot:run
+   ```
+5. Open `http://localhost:8080/` to use the dashboard, or call
+   `POST /api/orders` directly (see the example request above). To see a
+   non-happy-path scenario, stop the Pricing API container and submit an
+   order — it stays in `PENDING_PRICING` and the dashboard's "Retry
+   pricing" button (or the background scheduler) picks it up once the
+   provider is back.
+
 ## Submission
 
 Please provide:

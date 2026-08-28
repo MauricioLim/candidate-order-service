@@ -17,18 +17,18 @@ import java.util.UUID;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final LocalCatalogPriceService priceService;
+
     private final PricingClient pricingClient;
     private final Clock clock;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, LocalCatalogPriceService priceService, PricingClient pricingClient) {
-        this(orderRepository, priceService, pricingClient, Clock.systemUTC());
+    public OrderService(OrderRepository orderRepository, PricingClient pricingClient) {
+        this(orderRepository, pricingClient, Clock.systemUTC());
     }
 
-    OrderService(OrderRepository orderRepository, LocalCatalogPriceService priceService, PricingClient pricingClient, Clock clock) {
+    OrderService(OrderRepository orderRepository,  PricingClient pricingClient, Clock clock) {
         this.orderRepository = orderRepository;
-        this.priceService = priceService;
+
         this.pricingClient = pricingClient;
         this.clock = clock;
     }

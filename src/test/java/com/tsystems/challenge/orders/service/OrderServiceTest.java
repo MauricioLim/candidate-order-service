@@ -37,7 +37,7 @@ class OrderServiceTest {
 
         when(repository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        service = new OrderService(repository, new LocalCatalogPriceService(), pricingClient, fixedClock);
+        service = new OrderService(repository, pricingClient, fixedClock);
     }
 
     private CreateOrderRequest sampleRequest() {
